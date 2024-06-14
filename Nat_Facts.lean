@@ -12,8 +12,15 @@ def abs_diff (i j : ℕ) : ℕ :=
   if i>j then i-j else j-i
 
 --needed
-theorem ad_direction_known {n : ℕ }(h1: i<j) (h2 : abs_diff i j >= n) : j>= i+n := by
-  sorry
+theorem ad_direction_known {n i j : ℕ }(h1: i<j) (h2 : abs_diff i j >= n) : j>= i+n := by
+  unfold abs_diff at h2
+  have not_lt : ¬ i > j := by linarith [h1]
+  simp [not_lt] at h2
+  rw [add_comm]
+  exact add_le_of_le_sub (LT.lt.le h1) h2
+
+  
+  
   -- unfold abs_diff at h2
   -- have not_lt : ¬ i > j := by linarith [h1]
   -- simp [not_lt] at h2
@@ -26,7 +33,7 @@ theorem ad_direction_known {n : ℕ }(h1: i<j) (h2 : abs_diff i j >= n) : j>= i+
 
 --helper, potentially interesting if not already there
 theorem ge_not_e {a b : ℕ} (h1 : a>=b) (h2 : a≠b) : b < a := by
-  sorry
+  exact Nat.lt_of_le_of_ne h1 (id (Ne.symm h2))
 
 --helper, uninteresting (delete if you don't use it)
 theorem move_over {a b n : ℕ} (h2 : a>= b+n): a - n >= b := Nat.le_sub_of_add_le h2
@@ -46,7 +53,7 @@ theorem minus_plus {a b :  ℕ } (h : b<=a)  : a = a-b+b := by
 
 -- helper, interesting if new
 theorem sandwich {i j : ℕ} (h1 : i<=j) : (j = i+ (j-i)) := by
-  sorry
+exact Eq.symm (add_sub_of_le h1)
   -- induction' j with k hk
   -- · simp
   --   linarith [h1]
@@ -59,15 +66,22 @@ theorem sandwich {i j : ℕ} (h1 : i<=j) : (j = i+ (j-i)) := by
 
 -- helper, interesting if new
 theorem swap { a b c : ℕ } (h : b<= a) (h1 : b <= c) : a-b+c=a+(c-b) := by
-  sorry
+apply Nat.sub_add_comm at h
+rw [Nat.add_sub_assoc h1 a] at h
+apply (symm h)
+
+
+
 
 --helper, but interesting if it doesn't already exist
 theorem swap_assoc { a b c : ℕ } (h : b<= a) : a-b+c=(a+c)-b := by
-  sorry
+  exact Eq.symm (Nat.sub_add_comm h)
 
 --helper, but interesting if it doesn't already exist
 theorem changing_subtrahend {i j : ℕ} (h : j>i+1) : j-i = (j-(i+1))+1 := by
-  sorry
+  refine Nat.eq_add_of_sub_eq ?hle rfl
+  apply LT.lt.le at h
+  exact Nat.le_sub_of_add_le' h
 
 --helper, uninteresting (delete if you don't use it)
 theorem less_than_one_less {i j : ℕ} : i>j-1 ∨ i=j-1 ∨ i<j-1  := trichotomous i (j - 1)
@@ -77,26 +91,20 @@ theorem bigger_diff_positive { i j : ℕ} (h : j>i) : j-i>0 := Nat.sub_pos_of_lt
 
 --definitely need
 theorem ad_smaller_bigger {i j : ℕ} (h : i+1<j) : abs_diff (i + 1) j < abs_diff i j := by
-  sorry
-  -- unfold abs_diff
-  -- have H : ¬ j < i + 1 := by linarith [h]
-  -- have H1 : ¬ j < i := by linarith [h]
-  -- simp [H, H1]
+  unfold abs_diff
+  have H : ¬ j < i + 1 := by linarith [h]
+  have H1 : ¬ j < i := by linarith [h]
+  simp [H, H1]
+  exact sub_succ_lt_self j i (LT.lt.le h)
   -- rw [changing_subtrahend h]
   -- exact Nat.lt.base (j - (i + 1))
 
 --definitely need
 theorem ad_larger_littler {i j : ℕ} (h : i+1<j) : abs_diff i (j-1) < abs_diff i j := by
-  sorry
-  -- unfold abs_diff
-  -- have H : ¬ i > j - 1 := by
-  --   have sub_1 : i+1-1<j-1 := by exact move_over_lt h
-  --   have plus_minus : i+1-1=i := by rfl
-  --   rw [plus_minus] at sub_1
-  --   linarith [sub_1]
-  -- have H1 : ¬ j < i := by linarith [h]
-  -- simp [H, H1]
-  -- rw [changing_subtrahend h]
-  -- rw [Nat.sub_sub j 1 i]
-  -- rw [Nat.add_comm]
-  -- simp
+  unfold abs_diff
+  have H : ¬ i > j - 1 := by linarith [move_over_lt h]
+  have H1 : ¬ j < i := by linarith [h]
+  rw [add_comm] at h
+  have H2 : j - i > 0 := by linarith [move_over_lt h]
+  simp [H, H1]
+  exact minuend_minus_one H2
